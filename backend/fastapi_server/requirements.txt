@@ -1,0 +1,9 @@
+# backend/fastapi_server/requirements.txt
+fastapi
+uvicorn[standard]
+aiohttp
+python-jose[cryptography]
+sqlmodel
+prometheus_client
+PyJWT
+livekit-server-sdk
