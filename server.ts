@@ -4,6 +4,7 @@ import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { GoogleGenAI, LiveServerMessage, Modality, Type } from "@google/genai";
 import { WebSocketServer } from "ws";
+import Groq from "groq-sdk";
 import cors from "cors";
 import url from "url";
 
@@ -19,12 +20,15 @@ function getAI(): GoogleGenAI {
   }
   return new GoogleGenAI({
     apiKey: apiKey || "dummy-key",
-    httpOptions: {
-      headers: {
-        "User-Agent": "aistudio-build",
-      },
-    },
   });
+}
+
+function getGroq(): Groq {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    console.warn("GROQ_API_KEY is not set.");
+  }
+  return new Groq({ apiKey });
 }
 
 const PERSONA_SYSTEM_INSTRUCTION = `
@@ -38,15 +42,41 @@ async function startServer() {
 
   // Enable CORS for all routes
   app.use(cors());
+  app.use(express.json());
 
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({
       status: "ok",
-      app: "AURIC Voice AI Companion (Rebuilt)",
-      hasApiKey: Boolean(process.env.GEMINI_API_KEY),
+      app: "AURIC Voice AI Companion (Groq + WebSpeech Rebuild)",
+      hasApiKey: Boolean(process.env.GROQ_API_KEY),
       time: new Date().toISOString(),
     });
+  });
+
+  // Chat endpoint (Groq Llama-3)
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { text, history = [] } = req.body;
+      const groq = getGroq();
+      
+      const messages = [
+        { role: "system", content: PERSONA_SYSTEM_INSTRUCTION },
+        ...history,
+        { role: "user", content: text }
+      ];
+
+      const completion = await groq.chat.completions.create({
+        messages,
+        model: "openai/gpt-oss-20b",
+      });
+
+      const responseText = completion.choices[0]?.message?.content || "";
+      res.json({ response: responseText });
+    } catch (error) {
+      console.error("[Chat API] Error:", error);
+      res.status(500).json({ error: "Failed to generate response" });
+    }
   });
 
   // UTM / campaign tracking endpoint
