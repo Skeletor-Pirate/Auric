@@ -8,8 +8,7 @@ import Groq from "groq-sdk";
 import cors from "cors";
 import url from "url";
 import multer from 'multer';
-import FormData from 'form-data';
-import fetch from 'node-fetch';
+
 import fs from 'fs';
 import { pipeline } from '@xenova/transformers';
 
@@ -111,17 +110,16 @@ async function startServer() {
     try {
         if (!req.file) return res.status(400).json({ error: "No audio file" });
 
+        const buffer = fs.readFileSync(req.file.path);
+        const blob = new Blob([buffer], { type: req.file.mimetype || 'audio/webm' });
+        
         const formData = new FormData();
-        formData.append('file', fs.createReadStream(req.file.path), { 
-            filename: req.file.originalname || 'audio.webm', 
-            contentType: req.file.mimetype || 'audio/webm' 
-        });
+        formData.append('file', blob, req.file.originalname || 'audio.webm');
 
         const response = await fetch("https://api.sarvam.ai/speech-to-text", {
             method: "POST",
             headers: {
-                "api-subscription-key": process.env.SARVAM_API_KEY || "",
-                ...formData.getHeaders()
+                "api-subscription-key": process.env.SARVAM_API_KEY || ""
             },
             body: formData
         });
