@@ -1,0 +1,26 @@
+[
+  {
+    "query_id": 1,
+    "query": "What is the capital of France?",
+    "passages": [
+      "Paris is the capital and most populous city of France. Situated on the Seine River, in the north of the country, it is in the centre of the Île-de-France region. Paris has been one of Europe's major centres of finance, diplomacy, commerce, fashion, gastronomy, science, and arts.",
+      "France is a country located in Western Europe. Its capital is Paris, known for its cafe culture and the Eiffel Tower."
+    ]
+  },
+  {
+    "query_id": 2,
+    "query": "Who wrote Romeo and Juliet?",
+    "passages": [
+      "Romeo and Juliet is a tragedy written by William Shakespeare early in his career about two young Italian star-crossed lovers whose deaths ultimately reconcile their feuding families.",
+      "William Shakespeare was an English playwright, poet, and actor, widely regarded as the greatest writer in the English language and the world's greatest dramatist. He wrote Romeo and Juliet."
+    ]
+  },
+  {
+    "query_id": 3,
+    "query": "What is photosynthesis?",
+    "passages": [
+      "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy that, through cellular respiration, can later be released to fuel the organism's activities.",
+      "During photosynthesis in green plants, light energy is captured and used to convert water, carbon dioxide, and minerals into oxygen and energy-rich organic compounds."
+    ]
+  }
+]

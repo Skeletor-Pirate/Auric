@@ -1,21 +1,18 @@
-/**
- * ConversationManager.ts — WebSpeech + Groq client-side pipeline.
- * 
- * Uses ephemeral SpeechRecognition objects for absolute stability.
- */
 import { useAvatarStore } from "../state/avatarStore";
 import { avatarStateMachine } from "../avatar/AvatarStateMachine";
 import { audioManager } from "../audio/AudioManager";
 
 export class ConversationManager {
-  private recognition: any = null;
   private isAttemptingConnection = false;
   private chatHistory: any[] = [];
   private synthInterval: any = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   private failsafeTimer: any = null;
-  private consecutiveSpeechFrames = 0;
-  private spacebarListener: any = null;
+  
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioChunks: Blob[] = [];
+  private isRecording = false;
+  private silenceTimer: any = null;
 
   async startCall(): Promise<void> {
     if (this.isAttemptingConnection || useAvatarStore.getState().isConnected) return;
@@ -31,133 +28,129 @@ export class ConversationManager {
       store.setConnecting(false);
       store.setConnected(true);
       
-      // Initialize raw mic for volume detection (barge-in interruption)
       await audioManager.initMic(
-        () => {}, // Ignore audio chunks
-        () => {}, // Ignore laughter
-        (rms) => this.handleUserSpeaking(rms)
+        () => {}, 
+        () => {}, 
+        (rms) => this.handleUserVAD(rms)
       );
       
-      // Global spacebar listener for manual barge-in
-      if (!this.spacebarListener) {
-         this.spacebarListener = (e: KeyboardEvent) => {
-            if (e.code === "Space") {
-               e.preventDefault();
-               const store = useAvatarStore.getState();
-               if (store.isSpeaking) {
-                  this.handleBargeIn();
-               }
-            }
-         };
-         window.addEventListener("keydown", this.spacebarListener);
-      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       
-      this.startListening();
+      this.mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+             this.audioChunks.push(e.data);
+          }
+      };
+      
+      this.mediaRecorder.onstop = () => {
+          this.processRecordedAudio();
+      };
+      
+      avatarStateMachine.transition("idle", "Recognition active");
     } catch (err: any) {
       console.error("[Conversation] Call initialization failed:", err);
-      store.setLastError("Failed to initialize WebSpeech API.");
+      store.setLastError("Failed to initialize Mic API.");
       this.endCall();
     }
   }
-
-  private startListening() {
+  
+  private handleUserVAD(rms: number): void {
       const store = useAvatarStore.getState();
-      if (!store.isConnected || store.isSpeaking || store.isProcessing) return;
-
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-          store.setLastError("Speech Recognition API is not supported in this browser. Please use Chrome or Edge.");
-          this.endCall();
-          return;
-      }
-
-      if (this.recognition) {
-          this.recognition.onend = null;
-          try { this.recognition.abort(); } catch (e) {}
-      }
-
-      this.recognition = new SpeechRecognition();
-      // continuous = false makes it automatically detect when you stop speaking a sentence
-      this.recognition.continuous = false; 
-      this.recognition.interimResults = true;
+      if (store.isProcessing || store.isSpeaking || !store.isConnected) return;
       
-      this.recognition.onstart = () => {
-        avatarStateMachine.transition("idle", "Recognition active");
-      };
-
-      this.recognition.onresult = (event: any) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
+      const isSpeaking = rms > 0.05;
+      
+      if (isSpeaking) {
+          if (this.silenceTimer) {
+              clearTimeout(this.silenceTimer);
+              this.silenceTimer = null;
           }
-        }
-        
-        if (interimTranscript) {
-           store.setUserTranscript(interimTranscript);
-        }
-
-        if (finalTranscript) {
-           store.setUserTranscript(finalTranscript);
-           this.handleUserText(finalTranscript);
-        }
-      };
-
-      this.recognition.onerror = (e: any) => {
-        if (e.error === "not-allowed") {
-             store.setLastError("Microphone access denied.");
-             this.endCall();
-        }
-      };
-
-      this.recognition.onend = () => {
-         // Auto restart if still connected, not speaking, and not processing
-         const currentStore = useAvatarStore.getState();
-         if (currentStore.isConnected && !currentStore.isSpeaking && !currentStore.isProcessing) {
-             setTimeout(() => this.startListening(), 100);
-         }
-      };
-
+          
+          if (!this.isRecording && this.mediaRecorder?.state === "inactive") {
+              console.log("[STT] Starting recording...");
+              this.isRecording = true;
+              this.audioChunks = [];
+              try {
+                  this.mediaRecorder.start();
+                  avatarStateMachine.transition("listening", "User started speaking");
+              } catch (e) {
+                  console.error("Failed to start MediaRecorder:", e);
+                  this.isRecording = false;
+              }
+          }
+      } else {
+          if (this.isRecording) {
+              if (!this.silenceTimer) {
+                  this.silenceTimer = setTimeout(() => {
+                      if (this.mediaRecorder?.state === "recording") {
+                          console.log("[STT] Silence detected, stopping recording...");
+                          this.isRecording = false;
+                          this.mediaRecorder.stop();
+                      }
+                      this.silenceTimer = null;
+                  }, 1200); // 1.2s silence to end turn
+              }
+          }
+      }
+  }
+  
+  private async processRecordedAudio() {
+      const store = useAvatarStore.getState();
+      if (!store.isConnected) return;
+      
+      store.setProcessing(true);
+      avatarStateMachine.transition("processing", "Audio recorded, sending to Sarvam STT");
+      
+      const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+      this.audioChunks = [];
+      
+      const formData = new FormData();
+      formData.append('audio', blob, 'audio.webm');
+      
       try {
-          this.recognition.start();
+          // 1. Transcribe
+          console.log("[STT] Sending to Sarvam STT...");
+          const sttRes = await fetch('/api/transcribe', {
+              method: 'POST',
+              body: formData
+          });
+          const sttData = await sttRes.json();
+          if (!sttData.transcript) throw new Error("Transcription failed");
+          
+          store.setUserTranscript(sttData.transcript);
+          console.log(`[Analytics] STT: ${sttData.latency}ms`);
+          
+          // 2. RAG
+          this.handleUserText(sttData.transcript);
       } catch (e) {
-          console.error("Failed to start recognition", e);
+          console.error(e);
+          store.setProcessing(false);
+          avatarStateMachine.transition("idle", "Error processing audio");
       }
   }
 
   async handleUserText(text: string) {
-    if (!text.trim()) return;
-    
-    const store = useAvatarStore.getState();
-    store.setProcessing(true);
-    
-    // Stop listening while we process and talk
-    if (this.recognition) {
-       this.recognition.onend = null;
-       try { this.recognition.abort(); } catch(e) {}
+    if (!text.trim()) {
+        useAvatarStore.getState().setProcessing(false);
+        return;
     }
     window.speechSynthesis.cancel();
     
+    const store = useAvatarStore.getState();
     const turnId = Math.random().toString(36).substring(7);
     store.setCurrentTurnId(turnId);
-    avatarStateMachine.transition("processing", "User sent text", turnId);
     
     try {
         const protocol = window.location.protocol;
         const host = window.location.host;
-        const response = await fetch(`${protocol}//${host}/api/chat`, {
+        const response = await fetch(`${protocol}//${host}/api/rag`, {
            method: "POST",
            headers: { "Content-Type": "application/json" },
            body: JSON.stringify({ text, history: this.chatHistory })
         });
         
-        if (!response.ok) {
-           throw new Error("Failed to get response from Groq");
-        }
+        if (!response.ok) throw new Error("Failed to get RAG response");
         
         const data = await response.json();
         const aiText = data.response;
@@ -173,18 +166,12 @@ export class ConversationManager {
        console.error(e);
        store.setProcessing(false);
        store.setLastError("Network or API error while processing.");
-       this.startListening(); // Resume listening on error
+       avatarStateMachine.transition("idle", "Error");
     }
   }
 
   private cleanForSpeech(text: string): string {
-      return text
-          .replace(/<[^>]*>?/gm, '') // Remove HTML tags
-          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links, keep text
-          .replace(/[*_~`#]/g, '') // Remove markdown formatting characters
-          .replace(/(^|\n)\s*-\s+/g, '$1') // Remove list dashes
-          .replace(/\n+/g, ' ') // Replace newlines with space
-          .trim();
+      return text.replace(/<[^>]*>?/gm, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/[*_~`#]/g, '').replace(/(^|\n)\s*-\s+/g, '$1').replace(/\n+/g, ' ').trim();
   }
 
   speakResponse(text: string, turnId: string) {
@@ -200,10 +187,19 @@ export class ConversationManager {
      
      const store = useAvatarStore.getState();
      
+     let startTimeout = setTimeout(() => {
+         console.warn("[TTS] Speech synthesis failed to start within 2s, cancelling...");
+         window.speechSynthesis.cancel();
+         if (this.failsafeTimer) clearTimeout(this.failsafeTimer);
+         store.setSpeaking(false);
+         avatarStateMachine.transition("idle", "Speech synthesis failed");
+         this.currentUtterance = null;
+     }, 2000);
+
      utterance.onstart = () => {
+        clearTimeout(startTimeout);
         store.setSpeaking(true);
         avatarStateMachine.transition("speaking", "Audio output started", turnId);
-        
         this.synthInterval = setInterval(() => {
            store.setEmotion({ label: "neutral", intensity: Math.random() * 0.5 + 0.5 });
         }, 100);
@@ -211,69 +207,21 @@ export class ConversationManager {
      
      utterance.onend = () => {
         if (this.failsafeTimer) clearTimeout(this.failsafeTimer);
-        
         store.setSpeaking(false);
-        avatarStateMachine.transition("listening", "Model finished speaking");
+        avatarStateMachine.transition("idle", "Model finished speaking");
         clearInterval(this.synthInterval);
         this.currentUtterance = null;
-        
-        // Wait 500ms for echoes to clear, then listen
-        setTimeout(() => this.startListening(), 500);
      };
      
-     // Failsafe: if the speech gets stuck, force clear it
      if (this.failsafeTimer) clearTimeout(this.failsafeTimer);
      this.failsafeTimer = setTimeout(() => {
         const currentStore = useAvatarStore.getState();
         if (currentStore.isSpeaking && this.currentUtterance === utterance) {
-            console.warn("Failsafe: utterance onend never fired.");
-            if (this.currentUtterance.onend) {
-                this.currentUtterance.onend(new Event("end"));
-            }
+            if (this.currentUtterance.onend) this.currentUtterance.onend(new Event("end"));
         }
      }, Math.max(15000, text.length * 100)); 
 
      window.speechSynthesis.speak(utterance);
-  }
-
-  private handleUserSpeaking(rms: number): void {
-    const store = useAvatarStore.getState();
-    const isSpeaking = rms > 0.08; // Lowered threshold for loud noise / talking
-    
-    if (isSpeaking) {
-      this.consecutiveSpeechFrames++;
-      // Require ~60ms of consecutive loud frames
-      if (this.consecutiveSpeechFrames > 3) {
-        if (store.isSpeaking) {
-          console.log("[Conversation] Local interruption detected (barge-in)");
-          this.handleBargeIn();
-        }
-      }
-    } else {
-      this.consecutiveSpeechFrames = 0;
-    }
-  }
-
-  private handleBargeIn(): void {
-    window.speechSynthesis.cancel();
-    if (this.currentUtterance) {
-       this.currentUtterance.onend = null;
-       this.currentUtterance = null;
-    }
-    
-    const store = useAvatarStore.getState();
-    store.setSpeaking(false);
-    store.setProcessing(false);
-    clearInterval(this.synthInterval);
-    if (this.failsafeTimer) clearTimeout(this.failsafeTimer);
-    
-    avatarStateMachine.transition("interrupted", "User interrupted speaking");
-    setTimeout(() => {
-      if (avatarStateMachine.state === "interrupted") {
-        avatarStateMachine.transition("listening", "Listening reset after interruption");
-      }
-      this.startListening();
-    }, 400);
   }
 
   sendTextMessage(text: string): void {
@@ -283,18 +231,13 @@ export class ConversationManager {
   endCall(): void {
     this.isAttemptingConnection = false;
     audioManager.close();
-    if (this.spacebarListener) {
-       window.removeEventListener("keydown", this.spacebarListener);
-       this.spacebarListener = null;
-    }
-    if (this.recognition) {
-       this.recognition.onend = null;
-       try { this.recognition.abort(); } catch(e) {}
-       this.recognition = null;
-    }
     window.speechSynthesis.cancel();
     clearInterval(this.synthInterval);
     if (this.failsafeTimer) clearTimeout(this.failsafeTimer);
+    if (this.silenceTimer) clearTimeout(this.silenceTimer);
+    if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+        this.mediaRecorder.stop();
+    }
     
     const store = useAvatarStore.getState();
     store.setConnected(false);

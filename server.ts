@@ -7,11 +7,59 @@ import { WebSocketServer } from "ws";
 import Groq from "groq-sdk";
 import cors from "cors";
 import url from "url";
+import multer from 'multer';
+import FormData from 'form-data';
+import fetch from 'node-fetch';
+import fs from 'fs';
+import { pipeline } from '@xenova/transformers';
 
 dotenv.config();
 
+const app = express();
+const upload = multer({ dest: 'uploads/' });
+
 // In-memory session history storage (stores up to last 20 turns per session)
 const sessionHistories = new Map<string, any[]>();
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+// Load RAG Database
+const EMBEDDINGS_PATH = path.join(process.cwd(), 'data', 'embeddings.json');
+let vectorDB: any[] = [];
+let extractor: any = null;
+
+async function initRAG() {
+    try {
+        console.log("Loading RAG database...");
+        if (fs.existsSync(EMBEDDINGS_PATH)) {
+            vectorDB = JSON.parse(fs.readFileSync(EMBEDDINGS_PATH, 'utf-8'));
+            console.log(`Loaded ${vectorDB.length} chunks into memory.`);
+        } else {
+            console.warn("Embeddings file not found! Please run ingest.ts");
+        }
+        
+        console.log("Loading embedding model...");
+        extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+        console.log("RAG Pipeline ready.");
+    } catch (e) {
+        console.error("RAG init failed:", e);
+    }
+}
+
+// Cosine similarity
+function cosineSimilarity(vecA: number[], vecB: number[]) {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    for (let i = 0; i < vecA.length; i++) {
+        dotProduct += vecA[i] * vecB[i];
+        normA += vecA[i] * vecA[i];
+        normB += vecB[i] * vecB[i];
+    }
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
 
 function getAI(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -39,7 +87,7 @@ CRITICAL RULE: Your response will be spoken out loud via Text-to-Speech. You MUS
 `;
 
 async function startServer() {
-  const app = express();
+  await initRAG();
   const PORT = process.env.PORT || 3000;
 
   // Enable CORS for all routes
@@ -54,6 +102,111 @@ async function startServer() {
       hasApiKey: Boolean(process.env.GROQ_API_KEY),
       time: new Date().toISOString(),
     });
+  });
+
+  // Transcription (Speech-to-Text) using Sarvam API
+  app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
+    const startTime = Date.now();
+    try {
+        if (!req.file) return res.status(400).json({ error: "No audio file" });
+
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(req.file.path));
+
+        const response = await fetch("https://api.sarvam.ai/speech-to-text", {
+            method: "POST",
+            headers: {
+                "api-subscription-key": process.env.SARVAM_API_KEY || "",
+                ...formData.getHeaders()
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+        // Clean up file
+        fs.unlinkSync(req.file.path);
+        
+        const latency = Date.now() - startTime;
+        console.log(`[Analytics] STT Latency: ${latency}ms`);
+        
+        res.json({ transcript: data.transcript || "Could not transcribe", latency });
+    } catch (error) {
+        console.error("STT Error:", error);
+        res.status(500).json({ error: "Transcription failed" });
+    }
+  });
+
+  app.post('/api/rag', async (req, res) => {
+    const totalStartTime = Date.now();
+    try {
+      const { text, history } = req.body;
+      if (!text) return res.status(400).json({ error: "Missing text" });
+
+      // 1. Embed query
+      const embedStart = Date.now();
+      const output = await extractor(text, { pooling: 'mean', normalize: true });
+      const queryEmbedding = Array.from(output.data) as number[];
+      const embedLatency = Date.now() - embedStart;
+
+      // 2. Retrieve Top-K
+      const retrieveStart = Date.now();
+      const scoredChunks = vectorDB.map(chunk => ({
+          ...chunk,
+          score: cosineSimilarity(queryEmbedding, chunk.embedding)
+      }));
+      
+      // Sort by score descending
+      scoredChunks.sort((a, b) => b.score - a.score);
+      const topK = scoredChunks.slice(0, 3);
+      const retrieveLatency = Date.now() - retrieveStart;
+
+      // 3. Guardrail: Hallucination Check
+      const topScore = topK.length > 0 ? topK[0].score : 0;
+      let contextText = "";
+      let systemPrompt = "";
+
+      if (topScore < 0.15) {
+          console.log(`[Analytics] Guardrail Triggered (Max Score: ${topScore.toFixed(2)}) -> Handling as off-topic/casual.`);
+          systemPrompt = `You are Auric, a futuristic, highly advanced AI assistant. 
+The user is asking something completely outside your knowledge base. 
+Respond politely and conversationally in your persona. 
+CRITICAL RULE: DO NOT use Markdown formatting, hashes, or asterisks. Output pure plain text.`;
+      } else {
+          contextText = topK.map((c, i) => `[Context ${i+1}] ${c.text}`).join("\n\n");
+          systemPrompt = `You are Auric, a strict RAG AI. Answer the user's question using ONLY the provided context. If the context does not contain the answer, answer to the best of your ability.
+CRITICAL RULE: DO NOT use Markdown formatting, hashes, or asterisks. Output pure plain text.
+
+AVAILABLE CONTEXT:
+${contextText}`;
+      }
+
+      const messages = [
+        { role: "system", content: systemPrompt },
+        ...history,
+        { role: "user", content: text }
+      ];
+
+      const genStart = Date.now();
+      const completion = await groq.chat.completions.create({
+        messages,
+        model: "openai/gpt-oss-20b",
+        temperature: 0.2
+      });
+
+      const responseText = completion.choices[0]?.message?.content || "";
+      const genLatency = Date.now() - genStart;
+      const totalLatency = Date.now() - totalStartTime;
+
+      console.log(`[Analytics] RAG Total: ${totalLatency}ms | Embed: ${embedLatency}ms | Retrieve: ${retrieveLatency}ms | Gen: ${genLatency}ms`);
+
+      res.json({ 
+          response: responseText,
+          analytics: { embedLatency, retrieveLatency, genLatency, totalLatency }
+      });
+    } catch (error) {
+      console.error("[Chat API] Error:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
   });
 
   // Chat endpoint (Groq Llama-3)
@@ -99,20 +252,13 @@ async function startServer() {
     });
   });
 
-  // Client-side rendered routes handled by the SPA shell
-
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
-
-    // API 404s first (before Vite's SPA fallback can swallow them)
     app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));
-
     app.use(vite.middlewares);
-
-    // Unknown non-SPA paths fall through to the SPA shell (client renders 404)
     app.use((req, res, next) => {
       if (req.path.startsWith("/live")) return next();
       next();
