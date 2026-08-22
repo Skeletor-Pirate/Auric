@@ -112,7 +112,10 @@ async function startServer() {
         if (!req.file) return res.status(400).json({ error: "No audio file" });
 
         const formData = new FormData();
-        formData.append('file', fs.createReadStream(req.file.path));
+        formData.append('file', fs.createReadStream(req.file.path), { 
+            filename: req.file.originalname || 'audio.webm', 
+            contentType: req.file.mimetype || 'audio/webm' 
+        });
 
         const response = await fetch("https://api.sarvam.ai/speech-to-text", {
             method: "POST",
@@ -122,6 +125,11 @@ async function startServer() {
             },
             body: formData
         });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Sarvam STT failed: ${response.status} ${response.statusText} - ${errText}`);
+        }
 
         const data = await response.json();
         // Clean up file
