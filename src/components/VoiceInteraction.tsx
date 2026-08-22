@@ -45,9 +45,9 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
   const [textInput, setTextInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: "initial-katie-welcome",
-      role: "katie",
-      text: "Hey! I'm KATIE. I don't just listen to your words—I listen to HOW you say them. Your tone, rhythm, and pitch tell me how you're truly feeling. Tap the mic and just speak freely!",
+      id: "initial-auric-welcome",
+      role: "auric",
+      text: "Hey! I'm AURIC. I don't just listen to your words—I listen to HOW you say them. Your tone, rhythm, and pitch tell me how you're truly feeling. Tap the mic and just speak freely!",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       detectedEmotion: "Calm",
       moodMirror: "Warm, open, and ready to listen.",
@@ -236,11 +236,11 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
         acousticProsody: data.acousticAnalysis,
       };
 
-      // Add Katie response message
-      const katieMessage: ChatMessage = {
-        id: `katie-${Date.now()}`,
-        role: "katie",
-        text: data.katieResponse,
+      // Add Auric response message
+      const auricMessage: ChatMessage = {
+        id: `auric-${Date.now()}`,
+        role: "auric",
+        text: data.auricResponse,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         detectedEmotion: data.detectedEmotion,
         emotionScores: data.emotionScores,
@@ -251,8 +251,8 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
         acousticProsody: data.acousticAnalysis,
       };
 
-      setMessages((prev) => [...prev, userMessage, katieMessage]);
-      onSessionComplete(katieMessage);
+      setMessages((prev) => [...prev, userMessage, auricMessage]);
+      onSessionComplete(auricMessage);
 
       // Trigger celebratory confetti if Happy/Excited
       if (data.detectedEmotion === "Happy" || data.detectedEmotion === "Excited") {
@@ -263,13 +263,13 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
         });
       }
 
-      // Play Katie's voice
-      playResponseAudio(katieMessage);
+      // Play Auric's voice
+      playResponseAudio(auricMessage);
     } catch (err: any) {
       console.error("Conversation error:", err);
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
-        role: "katie",
+        role: "auric",
         text: "I heard you, but my neural voice connection had a brief hiccup. Let's take a deep breath together!",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         detectedEmotion: "Calm",
@@ -358,15 +358,15 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
         className="flex-1 min-h-[220px] max-h-[360px] overflow-y-auto pr-1 space-y-3.5"
       >
         {messages.map((msg) => {
-          const isKatie = msg.role === "katie";
+          const isAuric = msg.role === "auric";
           return (
             <div
               key={msg.id}
-              className={`flex flex-col ${isKatie ? "items-start" : "items-end"} gap-1`}
+              className={`flex flex-col ${isAuric ? "items-start" : "items-end"} gap-1`}
             >
               <div
                 className={`max-w-[88%] sm:max-w-[80%] rounded-3xl p-4 sm:p-5 text-sm leading-relaxed transition-all ${
-                  isKatie
+                  isAuric
                     ? "bg-white/5 text-white/90 shadow-2xl border border-white/10 rounded-tl-xs backdrop-blur-xl"
                     : "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-[0_0_20px_rgba(236,72,153,0.3)] rounded-tr-xs"
                 }`}
@@ -375,12 +375,12 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
                 <div className="flex items-center justify-between gap-2 mb-2 border-b border-white/10 pb-1.5">
                   <div className="flex items-center gap-2">
                     <span className="font-black text-xs tracking-wider uppercase">
-                      {isKatie ? "KATIE" : "You"}
+                      {isAuric ? "AURIC" : "You"}
                     </span>
                     {msg.detectedEmotion && (
                       <span
                         className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                          isKatie
+                          isAuric
                             ? "bg-pink-500/20 text-pink-400 border-pink-500/30"
                             : "bg-white/20 text-white border-white/30"
                         }`}
@@ -392,7 +392,7 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
 
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] text-white/40 font-mono">{msg.timestamp}</span>
-                    {isKatie && (
+                    {isAuric && (
                       <button
                         onClick={() =>
                           activePlayingId === msg.id
@@ -412,7 +412,7 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
                   </div>
                 </div>
 
-                {/* Mood Mirror Quote (if Katie) */}
+                {/* Mood Mirror Quote (if Auric) */}
                 {msg.moodMirror && (
                   <div className="text-xs font-medium italic text-pink-300 bg-pink-500/10 rounded-2xl p-2.5 mb-2.5 border border-pink-500/20">
                     "{msg.moodMirror}"
@@ -552,7 +552,7 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
         {/* Tactile Big Glowing Mic Button */}
         <div className="flex items-center gap-3 shrink-0">
           <button
-            id="katie-voice-record-toggle-btn"
+            id="auric-voice-record-toggle-btn"
             onClick={isRecording ? handleStopRecording : handleStartRecording}
             disabled={isLoading}
             className={`relative flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full font-bold text-sm transition-all shadow-md active:scale-95 ${
@@ -569,7 +569,7 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
             ) : (
               <>
                 <Mic className="w-5 h-5" />
-                <span>Talk to Katie</span>
+                <span>Talk to Auric</span>
               </>
             )}
           </button>
@@ -579,7 +579,7 @@ export const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
       {/* Alternative Keyboard Input Bar */}
       <form onSubmit={handleTextSubmit} className="flex items-center gap-2">
         <input
-          id="katie-text-input-field"
+          id="auric-text-input-field"
           type="text"
           value={textInput}
           onChange={(e) => setTextInput(e.target.value)}

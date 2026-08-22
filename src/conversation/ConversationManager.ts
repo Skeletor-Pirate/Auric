@@ -90,7 +90,7 @@ export class ConversationManager {
 
           // Handle text transcript updates
           if (msg.transcript) {
-            store.setKatieTranscript(msg.transcript);
+            store.setAuricTranscript(msg.transcript);
           }
           if (msg.userTranscript) {
             store.setUserTranscript(msg.userTranscript);

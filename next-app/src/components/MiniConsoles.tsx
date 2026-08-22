@@ -142,8 +142,8 @@ export const MiniConsoles: React.FC<MiniConsolesProps> = ({
       setDefusionResult(data);
 
       // Play voice script
-      if (data.katieVoiceScript) {
-        soundEngine.playWebSpeechFallback(data.katieVoiceScript, "Calm");
+      if (data.auricVoiceScript) {
+        soundEngine.playWebSpeechFallback(data.auricVoiceScript, "Calm");
       }
     } catch (err) {
       console.error("Defusion error:", err);
@@ -429,7 +429,7 @@ export const MiniConsoles: React.FC<MiniConsolesProps> = ({
               <div className="flex items-center justify-between pt-2">
                 <button
                   onClick={() =>
-                    soundEngine.playWebSpeechFallback(defusionResult.katieVoiceScript, "Calm")
+                    soundEngine.playWebSpeechFallback(defusionResult.auricVoiceScript, "Calm")
                   }
                   className="text-xs font-bold text-purple-300 hover:text-white flex items-center gap-1.5 bg-purple-500/10 px-3.5 py-1.5 rounded-full border border-purple-500/30"
                 >

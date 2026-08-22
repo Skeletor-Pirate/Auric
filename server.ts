@@ -43,7 +43,7 @@ async function startServer() {
   app.get("/api/health", (req, res) => {
     res.json({
       status: "ok",
-      app: "KATIE Voice AI Companion (Rebuilt)",
+      app: "AURIC Voice AI Companion (Rebuilt)",
       hasApiKey: Boolean(process.env.GEMINI_API_KEY),
       time: new Date().toISOString(),
     });
@@ -97,7 +97,7 @@ async function startServer() {
   }
 
   const httpServer = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`KATIE server listening on http://localhost:${PORT}`);
+    console.log(`AURIC server listening on http://localhost:${PORT}`);
   });
 
   const wss = new WebSocketServer({ server: httpServer, path: "/live" });

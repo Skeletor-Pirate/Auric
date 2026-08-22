@@ -1,7 +1,7 @@
 /**
  * TranscriptPanel.tsx — Live conversation dialogue panel.
  * 
- * Displays transcripts from both user and Katie.
+ * Displays transcripts from both user and Auric.
  * Distinguishes state indices (Listening, Thinking, Speaking).
  */
 import React, { useRef, useEffect } from "react";
@@ -11,7 +11,7 @@ export const TranscriptPanel: React.FC = () => {
   const isConnected = useAvatarStore((s) => s.isConnected);
   const avatarState = useAvatarStore((s) => s.avatarState);
   const userTranscript = useAvatarStore((s) => s.userTranscript);
-  const katieTranscript = useAvatarStore((s) => s.katieTranscript);
+  const auricTranscript = useAvatarStore((s) => s.auricTranscript);
   const isUserSpeaking = useAvatarStore((s) => s.isUserSpeaking);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,7 +20,7 @@ export const TranscriptPanel: React.FC = () => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [userTranscript, katieTranscript]);
+  }, [userTranscript, auricTranscript]);
 
   if (!isConnected) return null;
 
@@ -43,12 +43,12 @@ export const TranscriptPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Katie block */}
-      {katieTranscript && (
+      {/* Auric block */}
+      {auricTranscript && (
         <div className="flex flex-col gap-1">
-          <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-400">Katie</span>
+          <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-400">Auric</span>
           <p className="text-xs text-white/90 leading-relaxed font-medium bg-emerald-500/5 p-2 rounded-xl border border-emerald-500/10">
-            {katieTranscript}
+            {auricTranscript}
           </p>
         </div>
       )}
@@ -67,9 +67,9 @@ export const TranscriptPanel: React.FC = () => {
           {isUserSpeaking 
             ? "User Speaking..." 
             : avatarState === "processing" 
-            ? "Katie Thinking..." 
+            ? "Auric Thinking..." 
             : avatarState === "speaking" 
-            ? "Katie Replying..." 
+            ? "Auric Replying..." 
             : "Listening..."}
         </span>
       </div>

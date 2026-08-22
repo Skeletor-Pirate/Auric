@@ -29,7 +29,7 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
     vibeSummary:
       "Your voice shows high emotional self-awareness. Even during high-stress check-ins, your pitch modulation stabilized quickly during deep breathing sessions.",
     acousticResilienceScore: 89,
-    katieTip: "Honor those natural micro-pauses before responding to overwhelming tasks.",
+    auricTip: "Honor those natural micro-pauses before responding to overwhelming tasks.",
     strengths: ["Fast vocal recovery", "Emotional self-honesty", "Consistent check-in streak"],
   });
 
@@ -144,7 +144,7 @@ export const MoodAnalytics: React.FC<MoodAnalyticsProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
             <div className="p-3 bg-white/5 rounded-2xl border border-white/10 flex flex-col justify-between">
               <span className="font-bold text-pink-300 mb-1 text-[11px] uppercase tracking-wider">Kat's Weekly Coaching Tip:</span>
-              <p className="text-white/70 font-medium text-[11px]">{vibeReport.katieTip}</p>
+              <p className="text-white/70 font-medium text-[11px]">{vibeReport.auricTip}</p>
             </div>
 
             <div className="p-3 bg-white/5 rounded-2xl border border-white/10">

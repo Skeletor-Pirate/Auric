@@ -1,8 +1,8 @@
-# Auric OS (Katie Voice AI Companion)
+# Auric OS (Auric Voice AI Companion)
 
 ## Overview
 
-**Auric OS** (formerly Katie Voice AI Companion) is a real-time, highly capable Voice AI assistant built on the **Google Gemini Live API**. It features a modern, glassmorphic UI, real-time voice streaming over WebSockets, native web-search grounding, and an automatic API fallback cascade for external LLM routing.
+**Auric OS** (formerly Auric Voice AI Companion) is a real-time, highly capable Voice AI assistant built on the **Google Gemini Live API**. It features a modern, glassmorphic UI, real-time voice streaming over WebSockets, native web-search grounding, and an automatic API fallback cascade for external LLM routing.
 
 ## Tech Stack
 
@@ -30,7 +30,7 @@
 1. **Clone the repository**
    ```bash
    git clone <repo-url>
-   cd katie
+   cd auric
    ```
 
 2. **Create a `.env` file** in the root directory with your API keys:

@@ -90,7 +90,7 @@ export class ConversationManager {
 
           // Handle text transcript updates
           if (msg.transcript) {
-            store.setKatieTranscript(msg.transcript);
+            store.setAuricTranscript(msg.transcript);
           }
           if (msg.userTranscript) {
             store.setUserTranscript(msg.userTranscript);
@@ -165,7 +165,7 @@ export class ConversationManager {
     if (isSpeaking) {
       store.setUserSpeaking(true);
       
-      // If Katie was speaking, interrupt immediately (Local client-side barge-in)
+      // If Auric was speaking, interrupt immediately (Local client-side barge-in)
       if (avatarStateMachine.state === "speaking") {
         console.log("[Conversation] Local interruption detected");
         this.handleBargeIn();

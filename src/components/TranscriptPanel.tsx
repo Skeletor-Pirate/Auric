@@ -9,7 +9,7 @@ import { Loader2, MessageSquareText } from "lucide-react";
 
 export const TranscriptPanel: React.FC = () => {
   const userTranscript = useAvatarStore((s) => s.userTranscript);
-  const katieTranscript = useAvatarStore((s) => s.katieTranscript);
+  const auricTranscript = useAvatarStore((s) => s.auricTranscript);
   const isProcessing = useAvatarStore((s) => s.isProcessing);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -18,9 +18,9 @@ export const TranscriptPanel: React.FC = () => {
     if (panelRef.current) {
       panelRef.current.scrollTop = panelRef.current.scrollHeight;
     }
-  }, [userTranscript, katieTranscript]);
+  }, [userTranscript, auricTranscript]);
 
-  if (!userTranscript && !katieTranscript) return null;
+  if (!userTranscript && !auricTranscript) return null;
 
   return (
     <div className="absolute top-6 right-6 w-80 p-4 bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl flex flex-col gap-3 shadow-2xl z-20 pointer-events-auto">
@@ -44,11 +44,11 @@ export const TranscriptPanel: React.FC = () => {
         )}
 
         {/* Auric block */}
-        {katieTranscript && (
+        {auricTranscript && (
           <div className="flex flex-col gap-1">
             <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-500">Auric</span>
             <p className="text-xs text-gray-700 leading-relaxed font-medium bg-emerald-50 p-2 rounded-xl border border-emerald-100">
-              {katieTranscript}
+              {auricTranscript}
             </p>
           </div>
         )}

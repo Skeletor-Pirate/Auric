@@ -44,7 +44,7 @@ export interface EmotionScores {
 
 export interface ChatMessage {
   id: string;
-  role: "user" | "katie";
+  role: "user" | "auric";
   text: string;
   timestamp: string;
   detectedEmotion?: EmotionCategory;
@@ -60,7 +60,7 @@ export interface ChatMessage {
 export interface DefusionResult {
   defusedMetaphor: string;
   reframedThought: string;
-  katieVoiceScript: string;
+  auricVoiceScript: string;
   microAction: string;
 }
 
@@ -74,7 +74,7 @@ export interface VibeReport {
   dominantVibe: string;
   vibeSummary: string;
   acousticResilienceScore: number;
-  katieTip: string;
+  auricTip: string;
   strengths: string[];
 }
 
@@ -82,7 +82,7 @@ export interface VoiceJournalEntry {
   id: string;
   timestamp: string;
   transcript: string;
-  katieResponse: string;
+  auricResponse: string;
   detectedEmotion: EmotionCategory;
   moodScore: number; // 1-10
   acousticMetrics?: AcousticMetrics;

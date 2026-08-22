@@ -7,3 +7,9 @@ sqlmodel
 prometheus_client
 PyJWT
 livekit-server-sdk
+datasets
+sentence-transformers
+faiss-cpu
+numpy
+groq
+python-dotenv

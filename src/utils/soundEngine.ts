@@ -1,4 +1,4 @@
-// Web Audio Player & Ambient Synthesizer for KATIE companion
+// Web Audio Player & Ambient Synthesizer for AURIC companion
 
 class SoundEngine {
   private audioCtx: AudioContext | null = null;

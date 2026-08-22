@@ -1,5 +1,5 @@
 {
-  "name": "KATIE Voice AI Companion",
+  "name": "AURIC Voice AI Companion",
   "description": "A voice-first AI companion that hears how you feel through real-time acoustic emotion detection, tone analysis, and empathetic multimodal voice conversation.",
   "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

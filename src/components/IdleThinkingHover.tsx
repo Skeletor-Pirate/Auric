@@ -2,7 +2,7 @@
  * IdleThinkingHover.tsx — Agent "pretend to think" hover state.
  *
  * When the user hasn't spoken for 3 minutes while on a connected call,
- * Katie pretends to be deep in thought: a floating thinking bubble appears
+ * Auric pretends to be deep in thought: a floating thinking bubble appears
  * with animated dots so she looks alive and engaged.
  */
 import React, { useEffect, useState } from "react";
@@ -51,11 +51,11 @@ export const IdleThinkingHover: React.FC = () => {
       <div className="relative px-5 py-3 bg-[var(--panel-strong)] backdrop-blur-xl border border-[var(--border)] rounded-2xl shadow-2xl">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold text-[var(--muted)] uppercase tracking-widest mr-1">
-            Katie's thinking
+            Auric's thinking
           </span>
-          <span className="katie-think-dot w-1.5 h-1.5 rounded-full bg-pink-400" />
-          <span className="katie-think-dot w-1.5 h-1.5 rounded-full bg-pink-400" />
-          <span className="katie-think-dot w-1.5 h-1.5 rounded-full bg-pink-400" />
+          <span className="auric-think-dot w-1.5 h-1.5 rounded-full bg-pink-400" />
+          <span className="auric-think-dot w-1.5 h-1.5 rounded-full bg-pink-400" />
+          <span className="auric-think-dot w-1.5 h-1.5 rounded-full bg-pink-400" />
         </div>
         {/* Bubble tail */}
         <div className="absolute left-1/2 -bottom-1.5 -translate-x-1/2 w-3 h-3 bg-[var(--panel-strong)] border-r border-b border-[var(--border)] rotate-45" />

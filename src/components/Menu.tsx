@@ -54,7 +54,7 @@ export const Menu: React.FC = () => {
   }, [menuOpen, setMenuOpen]);
 
   const resetCookies = () => {
-    localStorage.removeItem("katie.cookieConsent");
+    localStorage.removeItem("auric.cookieConsent");
     window.location.reload();
   };
 

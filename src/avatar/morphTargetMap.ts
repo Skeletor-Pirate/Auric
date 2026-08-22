@@ -1,8 +1,8 @@
 /**
  * morphTargetMap.ts — Configurable mapping from semantic morph target names
- * to the actual names found in the Katie GLB model.
+ * to the actual names found in the Auric GLB model.
  *
- * The Katie GLB uses standard ARKit/ReadyPlayerMe naming for 51 facial blendshapes.
+ * The Auric GLB uses standard ARKit/ReadyPlayerMe naming for 51 facial blendshapes.
  * No viseme targets exist — lip sync uses amplitude-driven Mode A.
  *
  * All indices refer to the AvatarHead mesh (Mesh 2, node index 76).

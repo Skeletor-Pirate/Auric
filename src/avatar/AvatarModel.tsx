@@ -198,7 +198,7 @@ export const AvatarModel: React.FC<AvatarModelProps> = ({ analyserNode }) => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      (window as any).__katieDumpPose = () => {
+      (window as any).__auricDumpPose = () => {
         const names = ["AvatarRoot","Hips","Spine","Spine1","Spine2","Head","LeftShoulder","LeftArm","LeftForeArm","LeftForeArm1","LeftHand","RightShoulder","RightArm","RightForeArm","RightForeArm1","RightHand","LeftUpLeg","LeftLeg","LeftFoot","RightUpLeg","RightLeg","RightFoot"];
         return names.map((n) => {
           const b = bodyAnimRef.current.getBone(n);
@@ -209,7 +209,7 @@ export const AvatarModel: React.FC<AvatarModelProps> = ({ analyserNode }) => {
         }).join("\n");
       };
     }
-    return () => { if (typeof window !== "undefined") delete (window as any).__katieDumpPose; };
+    return () => { if (typeof window !== "undefined") delete (window as any).__auricDumpPose; };
   }, []);
 
   // Frame Update Loop (60 FPS)

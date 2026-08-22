@@ -34,7 +34,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ show }) => {
       {/* Status text */}
       <div className="flex flex-col items-center gap-3">
         <p className="text-sm font-bold tracking-widest text-white uppercase animate-pulse">
-          Waking up Katie...
+          Waking up Auric...
         </p>
 
         {/* Progress bar */}

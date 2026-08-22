@@ -51,10 +51,10 @@ export interface AvatarStore {
 
   // Transcript
   userTranscript: string;
-  katieTranscript: string;
+  auricTranscript: string;
   isUserSpeaking: boolean;
   setUserTranscript: (text: string) => void;
-  setKatieTranscript: (text: string) => void;
+  setAuricTranscript: (text: string) => void;
   setUserSpeaking: (speaking: boolean) => void;
 
   // Turn tracking
@@ -102,10 +102,10 @@ export const useAvatarStore = create<AvatarStore>((set) => ({
   },
 
   userTranscript: "",
-  katieTranscript: "",
+  auricTranscript: "",
   isUserSpeaking: false,
   setUserTranscript: (userTranscript) => set({ userTranscript }),
-  setKatieTranscript: (katieTranscript) => set({ katieTranscript }),
+  setAuricTranscript: (auricTranscript) => set({ auricTranscript }),
   setUserSpeaking: (isUserSpeaking) => set({ isUserSpeaking }),
 
   currentTurnId: null,

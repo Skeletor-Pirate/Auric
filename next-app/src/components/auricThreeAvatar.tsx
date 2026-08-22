@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-interface KatieThreeAvatarProps {
+interface AuricThreeAvatarProps {
   isSpeaking: boolean;
   analyserNode: AnalyserNode | null;
   emotion: string;
@@ -27,7 +27,7 @@ function setMorph(
   }
 }
 
-export const KatieThreeAvatar: React.FC<KatieThreeAvatarProps> = ({
+export const AuricThreeAvatar: React.FC<AuricThreeAvatarProps> = ({
   isSpeaking,
   analyserNode,
   emotion,
@@ -183,7 +183,7 @@ export const KatieThreeAvatar: React.FC<KatieThreeAvatarProps> = ({
             if (mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
               if (child.name === "AvatarHead" || Object.keys(mesh.morphTargetDictionary).length > 30) {
                 headMesh = mesh;
-                console.log("[Katie] Found head mesh:", child.name, "with", Object.keys(mesh.morphTargetDictionary).length, "morph targets");
+                console.log("[Auric] Found head mesh:", child.name, "with", Object.keys(mesh.morphTargetDictionary).length, "morph targets");
               }
             }
           }
@@ -193,8 +193,8 @@ export const KatieThreeAvatar: React.FC<KatieThreeAvatarProps> = ({
           }
         });
 
-        console.log("[Katie] Bones found:", Object.entries(bones).filter(([, v]) => v !== null).map(([k]) => k).join(", "));
-        console.log("[Katie] Head mesh:", headMesh ? "YES" : "NO");
+        console.log("[Auric] Bones found:", Object.entries(bones).filter(([, v]) => v !== null).map(([k]) => k).join(", "));
+        console.log("[Auric] Head mesh:", headMesh ? "YES" : "NO");
 
         scene.add(model);
 
@@ -507,10 +507,10 @@ export const KatieThreeAvatar: React.FC<KatieThreeAvatarProps> = ({
         animate();
       },
       (xhr) => {
-        console.log(`[Katie] Loading model: ${((xhr.loaded / xhr.total) * 100).toFixed(1)}%`);
+        console.log(`[Auric] Loading model: ${((xhr.loaded / xhr.total) * 100).toFixed(1)}%`);
       },
       (error) => {
-        console.error("[Katie] Failed to load GLB model:", error);
+        console.error("[Auric] Failed to load GLB model:", error);
       }
     );
 

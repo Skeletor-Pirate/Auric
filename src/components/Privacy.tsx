@@ -15,7 +15,7 @@ export const Privacy: React.FC = () => {
           className="inline-flex items-center gap-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Katie
+          Back to Auric
         </a>
 
         <h1 className="text-3xl sm:text-4xl font-black tracking-tighter bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
@@ -32,7 +32,7 @@ export const Privacy: React.FC = () => {
               <h2 className="text-base font-bold">Cookies</h2>
             </div>
             <p className="text-sm text-[var(--muted)] leading-relaxed">
-              Katie uses cookies to remember your preferences — like whether you use dark or light mode,
+              Auric uses cookies to remember your preferences — like whether you use dark or light mode,
               and your room theme choice. These are stored locally in your browser and never leave your device.
             </p>
           </section>

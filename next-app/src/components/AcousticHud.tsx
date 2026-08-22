@@ -86,7 +86,7 @@ export const AcousticHud: React.FC<AcousticHudProps> = ({
       {/* Mood Mirror Observation Highlight */}
       {moodMirror && (
         <div
-          id="katie-mood-mirror-card"
+          id="auric-mood-mirror-card"
           className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-start gap-3"
         >
           <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-[0_0_10px_rgba(236,72,153,0.3)] font-bold">

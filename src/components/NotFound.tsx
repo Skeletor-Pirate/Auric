@@ -39,7 +39,7 @@ export const NotFound: React.FC = () => {
           Lost in the void
         </h1>
         <p className="mt-4 max-w-sm text-[14px] text-[var(--muted)] leading-relaxed font-medium">
-          Looks like you wandered into a room that doesn't exist — even Katie doesn't know this one.
+          Looks like you wandered into a room that doesn't exist — even Auric doesn't know this one.
           Let's get you back.
         </p>
 
@@ -65,7 +65,7 @@ export const NotFound: React.FC = () => {
         </div>
 
         <p className="mt-12 text-[11px] font-medium tracking-widest text-[var(--muted)] uppercase">
-          Error 404 · Katie Voice AI
+          Error 404 · Auric Voice AI
         </p>
       </motion.div>
     </div>

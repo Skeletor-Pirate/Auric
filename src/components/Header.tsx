@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-white">
-              KATIE<span className="text-pink-500">.AI</span>
+              AURIC<span className="text-pink-500">.AI</span>
             </h1>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30 uppercase tracking-widest hidden sm:inline-block">
               SER PROSODY v2.4

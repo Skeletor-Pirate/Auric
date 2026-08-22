@@ -9,8 +9,8 @@ import { create } from "zustand";
 export type Theme = "dark" | "light";
 export type CookieConsent = "accepted" | "declined" | null;
 
-const THEME_KEY = "katie.theme";
-const COOKIE_KEY = "katie.cookieConsent";
+const THEME_KEY = "auric.theme";
+const COOKIE_KEY = "auric.cookieConsent";
 
 function readTheme(): Theme {
   const saved = localStorage.getItem(THEME_KEY);

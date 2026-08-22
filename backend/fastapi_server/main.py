@@ -27,7 +27,7 @@ def create_livekit_token() -> str:
     payload = {
         "exp": now + datetime.timedelta(hours=24),
         "iat": now,
-        "iss": "katie-avatar",
+        "iss": "auric-avatar",
         "sub": "user",
     }
     return jwt.encode(payload, LIVEKIT_SECRET, algorithm=ALGORITHM)

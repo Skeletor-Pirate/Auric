@@ -16,7 +16,7 @@ export interface UTMData {
   landedAt: number;
 }
 
-const UTM_KEY = "katie.utm";
+const UTM_KEY = "auric.utm";
 
 const UTM_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
 

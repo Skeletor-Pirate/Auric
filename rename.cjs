@@ -14,10 +14,10 @@ function walkAndReplace(dir) {
     if (stat.isDirectory()) {
       walkAndReplace(fullPath);
     } else {
-      // Rename file if it contains 'katie' (case insensitive)
+      // Rename file if it contains 'auric' (case insensitive)
       let newName = file;
-      if (file.toLowerCase().includes('katie')) {
-        newName = file.replace(/katie/gi, 'auric');
+      if (file.toLowerCase().includes('auric')) {
+        newName = file.replace(/auric/gi, 'auric');
         fs.renameSync(fullPath, path.join(dir, newName));
       }
       
@@ -29,9 +29,9 @@ function walkAndReplace(dir) {
       try {
         let content = fs.readFileSync(targetPath, 'utf8');
         let newContent = content
-          .replace(/katie/g, 'auric')
-          .replace(/Katie/g, 'Auric')
-          .replace(/KATIE/g, 'AURIC');
+          .replace(/auric/g, 'auric')
+          .replace(/Auric/g, 'Auric')
+          .replace(/AURIC/g, 'AURIC');
           
         if (content !== newContent) {
           fs.writeFileSync(targetPath, newContent, 'utf8');

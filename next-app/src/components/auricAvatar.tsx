@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { EmotionCategory, PersonalityMode } from "../types";
 
-interface KatieAvatarProps {
+interface AuricAvatarProps {
   emotion: EmotionCategory;
   isListening: boolean;
   isSpeaking: boolean;
@@ -9,7 +9,7 @@ interface KatieAvatarProps {
   personality: PersonalityMode;
 }
 
-export const KatieAvatar: React.FC<KatieAvatarProps> = ({
+export const AuricAvatar: React.FC<AuricAvatarProps> = ({
   emotion,
   isListening,
   isSpeaking,
@@ -103,7 +103,7 @@ export const KatieAvatar: React.FC<KatieAvatarProps> = ({
     : 1.0;
 
   return (
-    <div id="katie-avatar-container" className="relative flex flex-col items-center justify-center select-none py-4">
+    <div id="auric-avatar-container" className="relative flex flex-col items-center justify-center select-none py-4">
       {/* Concentric Ambient Geometric Radar Rings */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] rounded-full border border-white/5 animate-spin-slow" />
@@ -241,7 +241,7 @@ export const KatieAvatar: React.FC<KatieAvatarProps> = ({
       {/* Live Emotional State Pill */}
       <div className="mt-4 flex items-center gap-2 z-10">
         <div
-          id="katie-current-emotion-badge"
+          id="auric-current-emotion-badge"
           className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border shadow-sm transition-all flex items-center gap-1.5 ${theme.badgeBg}`}
         >
           <span className="w-2 h-2 rounded-full bg-current" />
