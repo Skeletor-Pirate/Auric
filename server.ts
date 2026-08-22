@@ -34,7 +34,7 @@ Speak naturally but precisely. You are not a human; you are a futuristic AI comp
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
 
   // Enable CORS for all routes
   app.use(cors());
