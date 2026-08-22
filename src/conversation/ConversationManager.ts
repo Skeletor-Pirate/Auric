@@ -5,6 +5,7 @@
  */
 import { useAvatarStore } from "../state/avatarStore";
 import { avatarStateMachine } from "../avatar/AvatarStateMachine";
+import { audioManager } from "../audio/AudioManager";
 
 export class ConversationManager {
   private recognition: any = null;
@@ -13,6 +14,8 @@ export class ConversationManager {
   private synthInterval: any = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   private failsafeTimer: any = null;
+  private consecutiveSpeechFrames = 0;
+  private spacebarListener: any = null;
 
   async startCall(): Promise<void> {
     if (this.isAttemptingConnection || useAvatarStore.getState().isConnected) return;
@@ -27,6 +30,28 @@ export class ConversationManager {
       this.isAttemptingConnection = false;
       store.setConnecting(false);
       store.setConnected(true);
+      
+      // Initialize raw mic for volume detection (barge-in interruption)
+      await audioManager.initMic(
+        () => {}, // Ignore audio chunks
+        () => {}, // Ignore laughter
+        (rms) => this.handleUserSpeaking(rms)
+      );
+      
+      // Global spacebar listener for manual barge-in
+      if (!this.spacebarListener) {
+         this.spacebarListener = (e: KeyboardEvent) => {
+            if (e.code === "Space") {
+               e.preventDefault();
+               const store = useAvatarStore.getState();
+               if (store.isSpeaking) {
+                  this.handleBargeIn();
+               }
+            }
+         };
+         window.addEventListener("keydown", this.spacebarListener);
+      }
+      
       this.startListening();
     } catch (err: any) {
       console.error("[Conversation] Call initialization failed:", err);
@@ -152,8 +177,19 @@ export class ConversationManager {
     }
   }
 
+  private cleanForSpeech(text: string): string {
+      return text
+          .replace(/<[^>]*>?/gm, '') // Remove HTML tags
+          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links, keep text
+          .replace(/[*_~`#]/g, '') // Remove markdown formatting characters
+          .replace(/(^|\n)\s*-\s+/g, '$1') // Remove list dashes
+          .replace(/\n+/g, ' ') // Replace newlines with space
+          .trim();
+  }
+
   speakResponse(text: string, turnId: string) {
-     this.currentUtterance = new SpeechSynthesisUtterance(text);
+     const cleanText = this.cleanForSpeech(text);
+     this.currentUtterance = new SpeechSynthesisUtterance(cleanText);
      const utterance = this.currentUtterance;
      
      const voices = window.speechSynthesis.getVoices();
@@ -200,12 +236,57 @@ export class ConversationManager {
      window.speechSynthesis.speak(utterance);
   }
 
+  private handleUserSpeaking(rms: number): void {
+    const store = useAvatarStore.getState();
+    const isSpeaking = rms > 0.08; // Lowered threshold for loud noise / talking
+    
+    if (isSpeaking) {
+      this.consecutiveSpeechFrames++;
+      // Require ~60ms of consecutive loud frames
+      if (this.consecutiveSpeechFrames > 3) {
+        if (store.isSpeaking) {
+          console.log("[Conversation] Local interruption detected (barge-in)");
+          this.handleBargeIn();
+        }
+      }
+    } else {
+      this.consecutiveSpeechFrames = 0;
+    }
+  }
+
+  private handleBargeIn(): void {
+    window.speechSynthesis.cancel();
+    if (this.currentUtterance) {
+       this.currentUtterance.onend = null;
+       this.currentUtterance = null;
+    }
+    
+    const store = useAvatarStore.getState();
+    store.setSpeaking(false);
+    store.setProcessing(false);
+    clearInterval(this.synthInterval);
+    if (this.failsafeTimer) clearTimeout(this.failsafeTimer);
+    
+    avatarStateMachine.transition("interrupted", "User interrupted speaking");
+    setTimeout(() => {
+      if (avatarStateMachine.state === "interrupted") {
+        avatarStateMachine.transition("listening", "Listening reset after interruption");
+      }
+      this.startListening();
+    }, 400);
+  }
+
   sendTextMessage(text: string): void {
      this.handleUserText(text);
   }
 
   endCall(): void {
     this.isAttemptingConnection = false;
+    audioManager.close();
+    if (this.spacebarListener) {
+       window.removeEventListener("keydown", this.spacebarListener);
+       this.spacebarListener = null;
+    }
     if (this.recognition) {
        this.recognition.onend = null;
        try { this.recognition.abort(); } catch(e) {}
