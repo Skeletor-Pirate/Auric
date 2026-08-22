@@ -121,7 +121,7 @@ async function startServer() {
     let session: any = null;
     let isClientClosed = false;
     let reconnectAttempts = 0;
-    const MAX_RECONNECT_ATTEMPTS = 5;
+    const MAX_RECONNECT_ATTEMPTS = 1;
 
     // ---------- Reusable Gemini session factory ----------
     async function createGeminiSession(isReconnect: boolean = false): Promise<any> {
