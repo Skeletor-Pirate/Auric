@@ -16,7 +16,8 @@ import { pipeline } from '@xenova/transformers';
 dotenv.config();
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
+import os from 'os';
+const upload = multer({ dest: os.tmpdir() });
 
 // In-memory session history storage (stores up to last 20 turns per session)
 const sessionHistories = new Map<string, any[]>();
